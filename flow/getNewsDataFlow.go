@@ -12,8 +12,8 @@ type GetNewsDataFlow struct {
 	query.NewsAPIURLQuery
 }
 
-func (flow *GetNewsDataFlow) GetData() ([]models.Article, error) {
-	url := flow.NewsAPIURLQuery.GetURL()
+func (flow *GetNewsDataFlow) GetData(query string) ([]models.Article, error) {
+	url := flow.NewsAPIURLQuery.GetURL(query)
 
 	body, err := flow.HTTPGetQuery.Get(url)
 	if err != nil {

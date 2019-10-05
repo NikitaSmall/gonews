@@ -35,10 +35,10 @@ func requestTopic(ctx *gin.Context) {
 	newsDataFlow := flow.GetNewsDataFlow{
 		HTTPGetQuery: query.HTTPGetQuery{},
 		NewsAPIURLQuery: query.NewNewsAPIURLQuery(
-			config.NewsAPIDomain, topic, config.NewsAPIKey),
+			config.NewsAPIDomain, config.NewsAPIKey),
 	}
 
-	data, err := newsDataFlow.GetData()
+	data, err := newsDataFlow.GetData(topic)
 	if err != nil {
 		ctx.Error(err)
 	} else {
