@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/nikitasmall/gonews/router"
+)
 
 func main() {
-	fmt.Println("Hello world!")
+	r := router.New()
+
+	log.Println("The server listen on :3000 port!")
+	r.Run(":3000")
 }
