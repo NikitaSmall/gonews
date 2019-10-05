@@ -4,6 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/nikitasmall/gonews/config"
+	"github.com/nikitasmall/gonews/flow"
+	"github.com/nikitasmall/gonews/query"
 )
 
 // New function returns the router for the whole project
@@ -13,7 +16,7 @@ func New() *gin.Engine {
 
 	router.GET("/all", getAll)
 	router.GET("/topic", getTopic)
-	router.POST("/topic", requestTopic)
+	router.POST("/topic/:topic", requestTopic)
 
 	return router
 }
@@ -27,5 +30,18 @@ func getTopic(ctx *gin.Context) {
 }
 
 func requestTopic(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"status": "requested"})
+	topic := ctx.Param("topic")
+
+	newsDataFlow := flow.GetNewsDataFlow{
+		HTTPGetQuery: query.HTTPGetQuery{},
+		NewsAPIURLQuery: query.NewNewsAPIURLQuery(
+			config.NewsAPIDomain, topic, config.NewsAPIKey),
+	}
+
+	data, err := newsDataFlow.GetData()
+	if err != nil {
+		ctx.Error(err)
+	} else {
+		ctx.JSON(http.StatusOK, data)
+	}
 }

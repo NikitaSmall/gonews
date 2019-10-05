@@ -10,8 +10,8 @@ type NewsAPIURLQuery struct {
 }
 
 // NewNewsAPIURLQuery creates an object that is used as a URL builder
-func NewNewsAPIURLQuery(domain, query, apiKey string) *NewsAPIURLQuery {
-	return &NewsAPIURLQuery{
+func NewNewsAPIURLQuery(domain, query, apiKey string) NewsAPIURLQuery {
+	return NewsAPIURLQuery{
 		Domain: domain,
 		Query:  query,
 		APIKey: apiKey,
