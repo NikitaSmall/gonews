@@ -4,8 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/nikitasmall/gonews/config"
 	"github.com/nikitasmall/gonews/flow"
 	"github.com/nikitasmall/gonews/models"
+	"github.com/nikitasmall/gonews/query"
 )
 
 // New function returns the router for the whole project
@@ -17,10 +19,17 @@ func New() *gin.Engine {
 	requestTopicChannel := make(chan string)
 	requestDataChannel := make(chan string)
 
+	newsDataFlow := flow.GetNewsDataFlow{
+		HTTPGetQuery: query.HTTPGetQuery{},
+		NewsAPIURLQuery: query.NewNewsAPIURLQuery(
+			config.NewsAPIDomain, config.NewsAPIKey),
+	}
+
 	backgroundProcessor := flow.ChanHandlerFlow{
 		RequestChan:     requestTopicChannel,
 		RequestNewsChan: requestDataChannel,
 		DataChan:        newsChannel,
+		GetNewsDataFlow: newsDataFlow,
 	}
 
 	go backgroundProcessor.Handle()
