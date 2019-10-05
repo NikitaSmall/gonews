@@ -4,9 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nikitasmall/gonews/config"
 	"github.com/nikitasmall/gonews/flow"
-	"github.com/nikitasmall/gonews/query"
+	"github.com/nikitasmall/gonews/models"
 )
 
 // New function returns the router for the whole project
@@ -14,9 +13,21 @@ import (
 func New() *gin.Engine {
 	router := gin.Default()
 
+	newsChannel := make(chan []models.Article)
+	requestTopicChannel := make(chan string)
+	requestDataChannel := make(chan string)
+
+	backgroundProcessor := flow.ChanHandlerFlow{
+		RequestChan:     requestTopicChannel,
+		RequestNewsChan: requestDataChannel,
+		DataChan:        newsChannel,
+	}
+
+	go backgroundProcessor.Handle()
+
 	router.GET("/all", getAll)
-	router.GET("/topic", getTopic)
-	router.POST("/topic/:topic", requestTopic)
+	router.GET("/topic/:topic", getTopic(requestDataChannel, newsChannel))
+	router.POST("/topic/:topic", requestTopic(requestTopicChannel))
 
 	return router
 }
@@ -25,23 +36,22 @@ func getAll(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
-func getTopic(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"status": "topic"})
+func getTopic(requestDataChannel chan string, dataChan chan []models.Article) func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		topic := ctx.Param("topic")
+
+		requestDataChannel <- topic
+
+		ctx.JSON(http.StatusOK, <-dataChan)
+	}
 }
 
-func requestTopic(ctx *gin.Context) {
-	topic := ctx.Param("topic")
+func requestTopic(requestTopicChannel chan string) func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		topic := ctx.Param("topic")
 
-	newsDataFlow := flow.GetNewsDataFlow{
-		HTTPGetQuery: query.HTTPGetQuery{},
-		NewsAPIURLQuery: query.NewNewsAPIURLQuery(
-			config.NewsAPIDomain, config.NewsAPIKey),
-	}
+		requestTopicChannel <- topic
 
-	data, err := newsDataFlow.GetData(topic)
-	if err != nil {
-		ctx.Error(err)
-	} else {
-		ctx.JSON(http.StatusOK, data)
+		ctx.JSON(http.StatusOK, gin.H{"status": "requested"})
 	}
 }
